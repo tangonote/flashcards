@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flashcards Sample</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 40px; }
+    #card { 
+      border: 2px solid #333; 
+      border-radius: 12px; 
+      padding: 40px; 
+      font-size: 2em; 
+      width: 60%; 
+      margin: 40px auto; 
+      cursor: pointer;
+      user-select: none;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Flashcards Sample</h1>
+  <div id="card">Loading...</div>
+  <div>
+    <button id="prevBtn">◀ Prev</button>
+    <button id="flipBtn">Flip</button>
+    <button id="nextBtn">Next ▶</button>
+  </div>
+
+  <script>
+    let cards = [];
+    let currentIndex = 0;
+    let showingFront = true;
+
+    // URLのパラメータからCSVのパスを取得 (?csv=data/fruit.csv)
+    const params = new URLSearchParams(window.location.search);
+    const csvFile = params.get("csv") || "data/fruit.csv";
+
+    // CSVを読み込み
+    fetch(csvFile)
+      .then(res => res.text())
+      .then(text => {
+        cards = text.trim().split("\n").map(line => {
+          const [front, back] = line.split(",");
+          return { front: front.trim(), back: back.trim() };
+        });
+        showCard();
+      });
+
+    function showCard() {
+      if (cards.length === 0) return;
+      const card = cards[currentIndex];
+      document.getElementById("card").textContent = showingFront ? card.front : card.back;
+    }
+
+    document.getElementById("flipBtn").addEventListener("click", () => {
+      showingFront = !showingFront;
+      showCard();
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      currentIndex = (currentIndex + 1) % cards.length;
+      showingFront = true;
+      showCard();
+    });
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+      showingFront = true;
+      showCard();
+    });
+
+    // カードをクリックしてもひっくり返せる
+    document.getElementById("card").addEventListener("click", () => {
+      showingFront = !showingFront;
+      showCard();
+    });
+  </script>
+</body>
+</html>
