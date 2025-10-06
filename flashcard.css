@@ -12,7 +12,7 @@
 }
 
 /* カード本体 */
-.card {
+#flashcard-app .card {
   padding: 40px;
   margin-bottom: 16px;
   border-radius: 12px;
@@ -23,18 +23,18 @@
 }
 
 /* 表面と裏面で色を変える */
-.card.front {
+#flashcard-app .card.front {
   background: #f0f8ff; /* 薄い青 */
   color: #003366;
 }
 
-.card.back {
+#flashcard-app .card.back {
   background: #fff0f5; /* 薄いピンク */
   color: #660033;
 }
 
 /* カードの内容 */
-.card-content {
+#flashcard-app .card-content {
   font-size: 26px;
   font-weight: bold;
   min-height: 80px;
@@ -44,7 +44,7 @@
 }
 
 /* ボタン群 */
-button {
+#flashcard-app button {
   margin: 6px;
   padding: 10px 20px;
   font-size: 16px;
@@ -54,36 +54,36 @@ button {
   transition: background-color 0.2s, transform 0.1s;
 }
 
-button:active {
+#flashcard-app button:active {
   transform: scale(0.97);
 }
 
 /* 覚えた・まだボタンの色 */
-#btn-know {
+#flashcard-app #btn-know {
   background-color: #4caf50;
   color: white;
 }
-#btn-know:hover {
+#flashcard-app #btn-know:hover {
   background-color: #45a049;
 }
 
-#btn-dont-know {
+#flashcard-app #btn-dont-know {
   background-color: #f44336;
   color: white;
 }
-#btn-dont-know:hover {
+#flashcard-app #btn-dont-know:hover {
   background-color: #e53935;
 }
 
 /* 進捗表示（例：3 / 20） */
-#progress {
+#flashcard-app #progress {
   font-size: 16px;
   color: #555;
   margin-top: 10px;
 }
 
 /* 達成率や結果表示 */
-#result {
+#flashcard-app #result {
   margin-top: 20px;
   font-size: 18px;
   font-weight: bold;
@@ -95,7 +95,7 @@ button:active {
 }
 
 /* 完了時のアニメーション感 */
-.complete {
+#flashcard-app .complete {
   animation: fadeIn 0.8s ease-in-out;
 }
 
