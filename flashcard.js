@@ -22,19 +22,9 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
 
   let currentIndex = 0;
   let showBack = false;
-  let flipSwitch = document.getElementById("flip-switch");
-  let flipEnabled = flipSwitch ? flipSwitch.checked : false;
   let learnedCount = 0;
   const totalCards = data.length;
 
-  // スイッチの変更イベントを追加
-  if (flipSwitch) {
-    flipSwitch.addEventListener("change", () => {
-      flipEnabled = flipSwitch.checked;
-      updateCard(); // 切り替えたらすぐカード表示更新
-    });
-  }
-  
   // カード要素
   const card = document.createElement("div");
   card.className = "card front";
@@ -73,15 +63,11 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
     }
 
     const current = data[currentIndex];
-    // flipEnabled が true なら front/back を入れ替える
-    if (flipEnabled) {
-      cardContent.textContent = showBack ? current.front : current.back;
-      card.className = showBack ? "card front" : "card back";
-    } else {
-      cardContent.textContent = showBack ? current.back : current.front;
-      card.className = showBack ? "card back" : "card front";
-    }
-    
+    cardContent.textContent = showBack ? current.back : current.front;
+
+    // クラス切替（色分け）
+    card.className = showBack ? "card back" : "card front";
+
     // 進捗表示（例：3 / 20）
     progress.textContent = `${currentIndex + 1} / ${totalCards}`;
   }
