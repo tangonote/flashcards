@@ -1,142 +1,136 @@
-// flashcard.js v20251007b
-// 機能追加：カードの順番を毎回シャッフルする
+// =======================================
+// Flashcard App – New Version (2025-10)
+// =======================================
 
+// CSV を読み込む関数
 async function loadCSV(url) {
   const response = await fetch(url);
   const text = await response.text();
-  return text.trim().split("\n").map(line => {
-    const [front, back] = line.split(",");
-    return { front: front.trim(), back: back.trim() };
-  });
+  return text
+    .trim()
+    .split("\n")
+    .map(line => {
+      const [front, back] = line.split(",");
+      return { front: front.trim(), back: back.trim() };
+    });
 }
 
-// ▼ 配列シャッフル関数（Fisher–Yates）
-function shuffleArray(array) {
-  const arr = array.slice();
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function createFlashcardApp(data, containerId) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "";
-
-  // ▼ 毎回ランダム順に並べ替える
-  let cards = shuffleArray(data);
+// Flashcard アプリを生成する関数
+function createFlashcardApp(data, targetId = "flashcard-app") {
+  const container = document.getElementById(targetId);
+  container.innerHTML = ""; // 初期化
 
   let currentIndex = 0;
-  let correct = [];
-  let incorrect = [];
-  let isFlipped = false;
-  let reversed = false;
+  let showBack = false;
+  let flipSwitch = document.getElementById("flip-switch");
+  let flipEnabled = flipSwitch ? flipSwitch.checked : false;
+  let learnedCount = 0;
+  const totalCards = data.length;
 
-  // ▼ 表裏切り替えスイッチ
-  const switchWrapper = document.createElement("div");
-  switchWrapper.className = "switch-wrapper";
-  const switchLabel = document.createElement("label");
-  switchLabel.className = "switch-label";
-  switchLabel.textContent = "表と裏を入れ替える";
-  const switchInput = document.createElement("input");
-  switchInput.type = "checkbox";
-  switchInput.addEventListener("change", () => {
-    reversed = switchInput.checked;
-    showCard();
-  });
-  switchWrapper.appendChild(switchInput);
-  switchWrapper.appendChild(switchLabel);
-  container.appendChild(switchWrapper);
-
-  // ▼ カード表示エリア
-  const card = document.createElement("div");
-  card.className = "card";
-  card.addEventListener("click", () => {
-    isFlipped = !isFlipped;
-    showCard();
-  });
-  container.appendChild(card);
-
-  // ▼ ボタン群
-  const buttonArea = document.createElement("div");
-  buttonArea.className = "button-area";
-  const correctBtn = document.createElement("button");
-  correctBtn.textContent = "できた";
-  const wrongBtn = document.createElement("button");
-  wrongBtn.textContent = "まだ";
-  buttonArea.append(correctBtn, wrongBtn);
-  container.appendChild(buttonArea);
-
-  // ▼ 結果表示
-  const resultArea = document.createElement("div");
-  resultArea.className = "result-area";
-  container.appendChild(resultArea);
-
-  correctBtn.addEventListener("click", () => {
-    correct.push(cards[currentIndex]);
-    nextCard();
-  });
-
-  wrongBtn.addEventListener("click", () => {
-    incorrect.push(cards[currentIndex]);
-    nextCard();
-  });
-
-  function showCard() {
-    const item = cards[currentIndex];
-    if (!item) return;
-    const front = reversed ? item.back : item.front;
-    const back = reversed ? item.front : item.back;
-    card.textContent = isFlipped ? back : front;
-    card.classList.toggle("flipped", isFlipped);
-  }
-
-  function nextCard() {
-    isFlipped = false;
-    currentIndex++;
-    if (currentIndex < cards.length) {
-      showCard();
-    } else {
-      showResult();
-    }
-  }
-
-  function showResult() {
-    card.style.display = "none";
-    buttonArea.style.display = "none";
-    switchWrapper.style.display = "none";
-
-    let resultHTML = `<h3>結果</h3>`;
-    resultHTML += `<p>${correct.length} / ${cards.length} 正解</p>`;
-
-    if (incorrect.length > 0) {
-      resultHTML += `<h4>まだの単語</h4><ul>`;
-      incorrect.forEach(item => {
-        const a = reversed ? `${item.back} - ${item.front}` : `${item.front} - ${item.back}`;
-        resultHTML += `<li>${a}</li>`;
-      });
-      resultHTML += `</ul>`;
-    }
-
-    // ▼ 再挑戦ボタン（シャッフルを含む）
-    resultHTML += `<button class="retry-btn" id="retry-btn">再挑戦</button>`;
-    resultArea.innerHTML = resultHTML;
-
-    document.getElementById("retry-btn").addEventListener("click", () => {
-      cards = shuffleArray(data); // ← ここで毎回新しくランダムに
-      currentIndex = 0;
-      correct = [];
-      incorrect = [];
-      card.style.display = "";
-      buttonArea.style.display = "";
-      switchWrapper.style.display = "";
-      resultArea.innerHTML = "";
-      isFlipped = false;
-      showCard();
+  // スイッチの変更イベントを追加
+  if (flipSwitch) {
+    flipSwitch.addEventListener("change", () => {
+      flipEnabled = flipSwitch.checked;
+      updateCard(); // 切り替えたらすぐカード表示更新
     });
   }
+  
+  // カード要素
+  const card = document.createElement("div");
+  card.className = "card front";
+  const cardContent = document.createElement("div");
+  cardContent.className = "card-content";
+  card.appendChild(cardContent);
+  container.appendChild(card);
 
-  // 初期カード表示
-  showCard();
+  // ボタン
+  const btnKnow = document.createElement("button");
+  btnKnow.id = "btn-know";
+  btnKnow.textContent = "覚えた";
+
+  const btnDontKnow = document.createElement("button");
+  btnDontKnow.id = "btn-dont-know";
+  btnDontKnow.textContent = "まだ";
+
+  container.appendChild(btnKnow);
+  container.appendChild(btnDontKnow);
+
+  // 枚数表示
+  const progress = document.createElement("div");
+  progress.id = "progress";
+  container.appendChild(progress);
+
+  // 一周完了時の結果表示
+  const result = document.createElement("div");
+  result.id = "result";
+  container.appendChild(result);
+
+  // カード更新処理
+  function updateCard() {
+    if (data.length === 0) {
+      cardContent.textContent = "カードがありません";
+      return;
+    }
+
+    const current = data[currentIndex];
+    // flipEnabled が true なら front/back を入れ替える
+    if (flipEnabled) {
+      cardContent.textContent = showBack ? current.front : current.back;
+      card.className = showBack ? "card front" : "card back";
+    } else {
+      cardContent.textContent = showBack ? current.back : current.front;
+      card.className = showBack ? "card back" : "card front";
+    }
+    
+    // 進捗表示（例：3 / 20）
+    progress.textContent = `${currentIndex + 1} / ${totalCards}`;
+  }
+
+  // 一周完了時の処理
+  function showResult() {
+    const percent = Math.round((learnedCount / totalCards) * 100);
+    result.innerHTML = `
+      <div class="complete">🎉 学習完了！</div>
+      <div>${totalCards}枚中 ${learnedCount}枚覚えました。</div>
+      <div>達成率：${percent}%</div>
+    `;
+    result.style.display = "block";
+  }
+
+  // カード反転
+  card.addEventListener("click", () => {
+    showBack = !showBack;
+    updateCard();
+  });
+
+  // 「覚えた」ボタン
+  btnKnow.addEventListener("click", () => {
+    learnedCount++;
+    nextCard();
+  });
+
+  // 「まだ」ボタン
+  btnDontKnow.addEventListener("click", () => {
+    nextCard();
+  });
+
+  // 次のカードへ
+  function nextCard() {
+    currentIndex++;
+    showBack = false;
+
+    if (currentIndex >= totalCards) {
+      showResult();
+      btnKnow.disabled = true;
+      btnDontKnow.disabled = true;
+      card.style.cursor = "default";
+      cardContent.textContent = "お疲れさまでした！";
+      return;
+    }
+
+    updateCard();
+  }
+
+  // 初期表示
+  updateCard();
 }

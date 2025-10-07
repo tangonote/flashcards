@@ -1,69 +1,105 @@
-/* flashcard.css v20251007a */
+/* =======================================
+   Flashcard App – New Version (2025-10)
+   ======================================= */
 
+/* アプリ全体 */
 #flashcard-app {
+  max-width: 600px;
+  margin: 30px auto;
   text-align: center;
-  font-family: "Yu Gothic", sans-serif;
+  font-family: "Noto Sans JP", sans-serif;
+  position: relative;
 }
 
-.switch-wrapper {
-  margin-bottom: 10px;
-}
-
-.card {
-  border: 2px solid #ccc;
-  border-radius: 12px;
+/* カード本体 */
+#flashcard-app .card {
   padding: 40px;
-  margin: 20px auto;
-  width: 260px;
-  font-size: 28px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  background: #fff;
-  transition: transform 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
+  user-select: none;
 }
 
-.card.flipped {
-  background: #f2f2f2;
-  transform: rotateY(180deg);
+/* 表面と裏面で色を変える */
+#flashcard-app .card.front {
+  background: #f0f8ff; /* 薄い青 */
+  color: #003366;
 }
 
-.button-area button {
-  margin: 10px;
-  padding: 10px 24px;
-  font-size: 18px;
-  border-radius: 8px;
+#flashcard-app .card.back {
+  background: #fff0f5; /* 薄いピンク */
+  color: #660033;
+}
+
+/* カードの内容 */
+#flashcard-app .card-content {
+  font-size: 26px;
+  font-weight: bold;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ボタン群 */
+#flashcard-app button {
+  margin: 6px;
+  padding: 10px 20px;
+  font-size: 16px;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
-.button-area button:first-child {
+#flashcard-app button:active {
+  transform: scale(0.97);
+}
+
+/* 覚えた・まだボタンの色 */
+#flashcard-app #btn-know {
   background-color: #4caf50;
   color: white;
 }
+#flashcard-app #btn-know:hover {
+  background-color: #45a049;
+}
 
-.button-area button:last-child {
+#flashcard-app #btn-dont-know {
   background-color: #f44336;
   color: white;
 }
+#flashcard-app #btn-dont-know:hover {
+  background-color: #e53935;
+}
 
-.result-area {
+/* 進捗表示（例：3 / 20） */
+#flashcard-app #progress {
+  font-size: 16px;
+  color: #555;
+  margin-top: 10px;
+}
+
+/* 達成率や結果表示 */
+#flashcard-app #result {
   margin-top: 20px;
-}
-
-.result-area ul {
-  list-style: none;
-  padding: 0;
-}
-
-.result-area li {
-  margin: 4px 0;
-}
-
-.retry-btn {
-  margin-top: 20px;
-  padding: 10px 24px;
-  background-color: #2196f3;
-  color: white;
-  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  background: #f9f9f9;
   border-radius: 8px;
-  cursor: pointer;
+  padding: 12px;
+  display: none; /* 一周終了まで非表示 */
+}
+
+/* 完了時のアニメーション感 */
+#flashcard-app .complete {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
 }
