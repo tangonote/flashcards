@@ -1,4 +1,5 @@
-// flashcard.js v20251007a
+// flashcard.js v20251007b
+// 機能追加：カードの順番を毎回シャッフルする
 
 async function loadCSV(url) {
   const response = await fetch(url);
@@ -9,9 +10,22 @@ async function loadCSV(url) {
   });
 }
 
+// ▼ 配列シャッフル関数（Fisher–Yates）
+function shuffleArray(array) {
+  const arr = array.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function createFlashcardApp(data, containerId) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
+
+  // ▼ 毎回ランダム順に並べ替える
+  let cards = shuffleArray(data);
 
   let currentIndex = 0;
   let correct = [];
@@ -60,19 +74,18 @@ function createFlashcardApp(data, containerId) {
   container.appendChild(resultArea);
 
   correctBtn.addEventListener("click", () => {
-    correct.push(data[currentIndex]);
+    correct.push(cards[currentIndex]);
     nextCard();
   });
 
   wrongBtn.addEventListener("click", () => {
-    incorrect.push(data[currentIndex]);
+    incorrect.push(cards[currentIndex]);
     nextCard();
   });
 
   function showCard() {
-    const item = data[currentIndex];
+    const item = cards[currentIndex];
     if (!item) return;
-
     const front = reversed ? item.back : item.front;
     const back = reversed ? item.front : item.back;
     card.textContent = isFlipped ? back : front;
@@ -82,7 +95,7 @@ function createFlashcardApp(data, containerId) {
   function nextCard() {
     isFlipped = false;
     currentIndex++;
-    if (currentIndex < data.length) {
+    if (currentIndex < cards.length) {
       showCard();
     } else {
       showResult();
@@ -95,7 +108,7 @@ function createFlashcardApp(data, containerId) {
     switchWrapper.style.display = "none";
 
     let resultHTML = `<h3>結果</h3>`;
-    resultHTML += `<p>${correct.length} / ${data.length} 正解</p>`;
+    resultHTML += `<p>${correct.length} / ${cards.length} 正解</p>`;
 
     if (incorrect.length > 0) {
       resultHTML += `<h4>まだの単語</h4><ul>`;
@@ -106,11 +119,12 @@ function createFlashcardApp(data, containerId) {
       resultHTML += `</ul>`;
     }
 
-    // ▼ 再挑戦ボタン
+    // ▼ 再挑戦ボタン（シャッフルを含む）
     resultHTML += `<button class="retry-btn" id="retry-btn">再挑戦</button>`;
     resultArea.innerHTML = resultHTML;
 
     document.getElementById("retry-btn").addEventListener("click", () => {
+      cards = shuffleArray(data); // ← ここで毎回新しくランダムに
       currentIndex = 0;
       correct = [];
       incorrect = [];
@@ -118,6 +132,7 @@ function createFlashcardApp(data, containerId) {
       buttonArea.style.display = "";
       switchWrapper.style.display = "";
       resultArea.innerHTML = "";
+      isFlipped = false;
       showCard();
     });
   }
