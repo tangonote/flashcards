@@ -136,9 +136,15 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
       const pairs = missedWords.map(item => {
         return isReversed ? `${item.back} - ${item.front}` : `${item.front} - ${item.back}`;
       });
-      missedHTML = `<div class="missed-list">${pairs.map(p => `<div>${p}</div>`).join("")}</div>`;
+      missedHTML = `<div class="missed-list">
+        <div><strong>まだ覚えていないカード</strong></div>
+        ${pairs.map(p => `<div>${p}</div>`).join("")}
+      </div>`;
     } else {
-      missedHTML = `<div class="missed-list">まだの単語：なし（全て覚えました）</div>`;
+      missedHTML = `<div class="missed-list">
+        <div><strong>まだ覚えていないカード</strong></div>
+        <div>なし（全て覚えました）</div>
+      </div>`;
     }
 
     result.innerHTML = `
