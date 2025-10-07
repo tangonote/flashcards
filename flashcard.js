@@ -20,6 +20,12 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   const container = document.getElementById(targetId);
   container.innerHTML = ""; // 初期化
 
+  // Fisher–Yates shuffle
+  for (let i = data.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [data[i], data[j]] = [data[j], data[i]];
+  }
+
   let currentIndex = 0;
   let isReversed = false; // 表裏の入れ替えフラグ
   let showBack = false;
