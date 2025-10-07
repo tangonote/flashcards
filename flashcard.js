@@ -147,6 +147,10 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
 
   // 一周完了時の処理（結果表示）
   function endSession() {
+    console.log('=== endSession called ===');
+    console.log('missedWords (count):', missedWords.length, missedWords);
+    window._lastMissedWords = missedWords.slice(); // デバッグ用にグローバルに保持
+
     // hide interactive UI
     card.style.display = "none";
     btnKnow.style.display = "none";
