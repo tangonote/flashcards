@@ -94,6 +94,19 @@
   display: none; /* 一周終了まで非表示 */
 }
 
+#flashcard-app .missed-list {
+  margin-top: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 4px;
+  border-top: 1px solid #ccc;
+}
+
+#flashcard-app .missed-list div {
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
 /* 完了時のアニメーション感 */
 #flashcard-app .complete {
   animation: fadeIn 0.8s ease-in-out;
