@@ -21,6 +21,7 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   container.innerHTML = ""; // 初期化
 
   let currentIndex = 0;
+  let isReversed = false; // 表裏の入れ替えフラグ
   let showBack = false;
   let learnedCount = 0;
   const totalCards = data.length;
@@ -42,8 +43,22 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   btnDontKnow.id = "btn-dont-know";
   btnDontKnow.textContent = "まだ";
 
+  // 表裏切り替えスイッチ
+  const toggleSwitch = document.createElement("button");
+  toggleSwitch.id = "btn-toggle";
+  toggleSwitch.textContent = "表裏入れ替え";
+  container.appendChild(toggleSwitch);
+
   container.appendChild(btnKnow);
   container.appendChild(btnDontKnow);
+
+  // スイッチの動作を定義
+  toggleSwitch.addEventListener("click", () => {
+    isReversed = !isReversed;
+    toggleSwitch.textContent = isReversed ? "通常表示に戻す" : "表裏入れ替え";
+    updateCard(); // 現在のカードを更新して反映
+  });
+  
 
   // 枚数表示
   const progress = document.createElement("div");
@@ -63,7 +78,13 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
     }
 
     const current = data[currentIndex];
-    cardContent.textContent = showBack ? current.back : current.front;
+    if (isReversed) {
+      // 表裏反転モード時
+      cardContent.textContent = showBack ? current.front : current.back;
+    } else {
+      // 通常モード
+      cardContent.textContent = showBack ? current.back : current.front;
+    }
 
     // クラス切替（色分け）
     card.className = showBack ? "card back" : "card front";
