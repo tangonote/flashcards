@@ -99,16 +99,35 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
     progress.textContent = `${currentIndex + 1} / ${totalCards}`;
   }
 
-  // 一周完了時の処理
-  function showResult() {
-    const percent = Math.round((learnedCount / totalCards) * 100);
-    result.innerHTML = `
-      <div class="complete">🎉 学習完了！</div>
-      <div>${totalCards}枚中 ${learnedCount}枚覚えました。</div>
-      <div>達成率：${percent}%</div>
-    `;
-    result.style.display = "block";
-  }
+// 一周完了時の処理
+function showResult() {
+  const percent = Math.round((learnedCount / totalCards) * 100);
+  result.innerHTML = `
+    <div class="complete">🎉 学習完了！</div>
+    <div>${totalCards}枚中 ${learnedCount}枚覚えました。</div>
+    <div>達成率：${percent}%</div>
+    <button id="btn-restart">再挑戦</button>
+  `;
+  result.style.display = "block";
+
+  // 再挑戦ボタンの動作を定義
+  const btnRestart = document.getElementById("btn-restart");
+  btnRestart.addEventListener("click", () => {
+    // 状態を初期化
+    currentIndex = 0;
+    learnedCount = 0;
+    showBack = false;
+
+    // ボタンを再び有効にする
+    btnKnow.disabled = false;
+    btnDontKnow.disabled = false;
+    card.style.cursor = "pointer";
+
+    // 結果画面を非表示にして再開
+    result.style.display = "none";
+    updateCard();
+  });
+}
 
   // カード反転
   card.addEventListener("click", () => {
