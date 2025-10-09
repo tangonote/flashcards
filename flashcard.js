@@ -50,6 +50,7 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   toggleContainer.style.display = "flex";
   toggleContainer.style.alignItems = "center";
   toggleContainer.style.gap = "6px";
+  toggleContainer.style.zIndex = "1000"; // カードより前面に固定
 
   const toggleLabel = document.createElement("span");
   toggleLabel.className = "toggle-label";
