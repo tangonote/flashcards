@@ -40,10 +40,33 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   let missedWords = [];
 
   // ----- UI作成 -----
-  const toggleSwitch = document.createElement("button");
-  toggleSwitch.id = "btn-toggle";
-  toggleSwitch.textContent = "表裏入れ替え";
-  container.appendChild(toggleSwitch);
+
+  // --- 表裏切り替えスイッチ（トグル風） ---
+  const toggleWrapper = document.createElement("div");
+  toggleWrapper.className = "toggle-wrapper";
+
+  const toggleLabel = document.createElement("label");
+  toggleLabel.className = "switch";
+
+  const toggleInput = document.createElement("input");
+  toggleInput.type = "checkbox";
+  const toggleSlider = document.createElement("span");
+  toggleSlider.className = "slider";
+
+  const toggleText = document.createElement("span");
+  toggleText.className = "toggle-text";
+  toggleText.textContent = "表⇄裏";
+
+  toggleLabel.appendChild(toggleInput);
+  toggleLabel.appendChild(toggleSlider);
+  toggleWrapper.appendChild(toggleLabel);
+  container.appendChild(toggleWrapper);
+
+  // イベント設定
+  toggleInput.addEventListener("change", () => {
+    isReversed = toggleInput.checked;
+    updateCard();
+  });
 
   const card = document.createElement("div");
   card.className = "card front";

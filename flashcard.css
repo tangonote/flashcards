@@ -13,6 +13,7 @@
 
 /* カード本体 */
 #flashcard-app .card {
+  position: relative;
   padding: 40px;
   margin-bottom: 16px;
   border-radius: 12px;
@@ -115,4 +116,70 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
+}
+
+/* --- トグルスイッチ全体を右上に配置 --- */
+.toggle-wrapper {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* スイッチと文字の間隔 */
+  z-index: 10;
+}
+
+.toggle-text {
+  font-size: 0.9rem;
+  color: #333;
+  user-select: none;
+}
+
+/* --- トグルスイッチ基本形（スマホ風） --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* 背景バー部分 */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+/* 丸いつまみ部分 */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+/* チェック時（ON） */
+input:checked + .slider {
+  background-color: #4CAF50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
 }
