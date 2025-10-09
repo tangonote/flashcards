@@ -1,9 +1,6 @@
 // =======================================
-// Flashcard App – New Version (2025-10)
+// Flashcard App – New Version (2025-10-09)
 // =======================================
-
-// flashcard.js v20251008b
-// 機能：表裏入れ替えスイッチ / 初回シャッフル / 一周結果で「まだ」一覧（縦並び・スクロール） / 再挑戦
 
 async function loadCSV(url) {
   const response = await fetch(url);
@@ -39,32 +36,33 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   let learnedCount = 0;
   let missedWords = [];
 
-  // ----- UI作成 -----
+  // ----------------------------------
+  // UI構築
+  // ----------------------------------
 
-  // --- 表裏切り替えスイッチ（トグル風） ---
+  // トグルスイッチ（右上外側配置）
   const toggleContainer = document.createElement("div");
   toggleContainer.id = "btn-toggle-container";
+  toggleContainer.style.position = "absolute";
+  toggleContainer.style.top = "0";
+  toggleContainer.style.right = "0";
+  toggleContainer.style.margin = "10px";
+  toggleContainer.style.display = "flex";
+  toggleContainer.style.alignItems = "center";
+  toggleContainer.style.gap = "6px";
 
-  // スイッチ本体
-  const toggleSwitch = document.createElement("div");
-  toggleSwitch.className = "toggle-switch";
-
-  // ラベル（表⇄裏）
   const toggleLabel = document.createElement("span");
   toggleLabel.className = "toggle-label";
   toggleLabel.textContent = "表⇄裏";
+
+  const toggleSwitch = document.createElement("div");
+  toggleSwitch.className = "toggle-switch";
 
   toggleContainer.appendChild(toggleLabel);
   toggleContainer.appendChild(toggleSwitch);
   container.appendChild(toggleContainer);
 
-  // スイッチの動作
-  toggleSwitch.addEventListener("click", () => {
-    isReversed = !isReversed;
-    toggleSwitch.classList.toggle("active", isReversed);
-    updateCard();
-  });
-
+  // カード
   const card = document.createElement("div");
   card.className = "card front";
   const cardContent = document.createElement("div");
@@ -72,6 +70,7 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   card.appendChild(cardContent);
   container.appendChild(card);
 
+  // ボタン
   const btnKnow = document.createElement("button");
   btnKnow.id = "btn-know";
   btnKnow.textContent = "おぼえた！";
@@ -80,9 +79,14 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   btnDontKnow.id = "btn-dont-know";
   btnDontKnow.textContent = "もうすこし";
 
-  container.appendChild(btnKnow);
-  container.appendChild(btnDontKnow);
+  // 横並びボタンコンテナ
+  const btnContainer = document.createElement("div");
+  btnContainer.id = "btn-container";
+  btnContainer.appendChild(btnKnow);
+  btnContainer.appendChild(btnDontKnow);
+  container.appendChild(btnContainer);
 
+  // 進捗と結果
   const progress = document.createElement("div");
   progress.id = "progress";
   container.appendChild(progress);
@@ -91,10 +95,13 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   result.id = "result";
   container.appendChild(result);
 
-  // ----- イベント定義 -----
+  // ----------------------------------
+  // イベント設定
+  // ----------------------------------
+
   toggleSwitch.addEventListener("click", () => {
     isReversed = !isReversed;
-    toggleSwitch.textContent = isReversed ? "通常表示に戻す" : "表裏入れ替え";
+    toggleSwitch.classList.toggle("active", isReversed);
     updateCard();
   });
 
@@ -110,10 +117,16 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
 
   btnDontKnow.addEventListener("click", () => {
     const curr = cards[currentIndex];
-    const exists = missedWords.some(item => item.front === curr.front && item.back === curr.back);
+    const exists = missedWords.some(
+      item => item.front === curr.front && item.back === curr.back
+    );
     if (!exists) missedWords.push(curr);
     nextCard();
   });
+
+  // ----------------------------------
+  // 関数群
+  // ----------------------------------
 
   function updateCard() {
     if (totalCards === 0) {
@@ -124,9 +137,9 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
 
     const current = cards[currentIndex];
     const frontText = isReversed ? current.back : current.front;
-    const backText  = isReversed ? current.front : current.back;
-    cardContent.textContent = showBack ? backText : frontText;
+    const backText = isReversed ? current.front : current.back;
 
+    cardContent.textContent = showBack ? backText : frontText;
     card.className = showBack ? "card back" : "card front";
     progress.textContent = `${currentIndex + 1} / ${totalCards}`;
   }
@@ -143,14 +156,12 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
 
   function endSession() {
     card.style.display = "none";
-    btnKnow.style.display = "none";
-    btnDontKnow.style.display = "none";
-    toggleSwitch.style.display = "none";
+    btnContainer.style.display = "none";
+    toggleContainer.style.display = "none";
     progress.style.display = "none";
 
     const percent = totalCards === 0 ? 0 : Math.round((learnedCount / totalCards) * 100);
 
-    // 「まだ」一覧を縦並びで表示
     let missedHTML = "";
     if (missedWords.length > 0) {
       const pairs = missedWords.map(item => {
@@ -176,29 +187,23 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
     `;
     result.style.display = "block";
 
-    const retryBtn = document.getElementById("btn-retry");
-    retryBtn.addEventListener("click", () => {
-      // 同じ順序で再スタート
+    document.getElementById("btn-retry").addEventListener("click", () => {
       currentIndex = 0;
       showBack = false;
       learnedCount = 0;
       missedWords = [];
 
       card.style.display = "";
-      btnKnow.style.display = "";
-      btnDontKnow.style.display = "";
-      toggleSwitch.style.display = "";
+      btnContainer.style.display = "";
+      toggleContainer.style.display = "";
       progress.style.display = "";
       result.style.display = "none";
-
-      btnKnow.disabled = false;
-      btnDontKnow.disabled = false;
-      card.style.cursor = "pointer";
 
       updateCard();
     });
   }
 
+  // 初期表示
   if (totalCards > 0) {
     updateCard();
   } else {
