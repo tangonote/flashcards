@@ -42,29 +42,26 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   // ----- UI作成 -----
 
   // --- 表裏切り替えスイッチ（トグル風） ---
-  const toggleWrapper = document.createElement("div");
-  toggleWrapper.className = "toggle-wrapper";
+  const toggleContainer = document.createElement("div");
+  toggleContainer.id = "btn-toggle-container";
 
-  const toggleLabel = document.createElement("label");
-  toggleLabel.className = "switch";
+  // スイッチ本体
+  const toggleSwitch = document.createElement("div");
+  toggleSwitch.className = "toggle-switch";
 
-  const toggleInput = document.createElement("input");
-  toggleInput.type = "checkbox";
-  const toggleSlider = document.createElement("span");
-  toggleSlider.className = "slider";
+  // ラベル（表⇄裏）
+  const toggleLabel = document.createElement("span");
+  toggleLabel.className = "toggle-label";
+  toggleLabel.textContent = "表⇄裏";
 
-  const toggleText = document.createElement("span");
-  toggleText.className = "toggle-text";
-  toggleText.textContent = "表⇄裏";
+  toggleContainer.appendChild(toggleLabel);
+  toggleContainer.appendChild(toggleSwitch);
+  container.appendChild(toggleContainer);
 
-  toggleLabel.appendChild(toggleInput);
-  toggleLabel.appendChild(toggleSlider);
-  toggleWrapper.appendChild(toggleLabel);
-  container.appendChild(toggleWrapper);
-
-  // イベント設定
-  toggleInput.addEventListener("change", () => {
-    isReversed = toggleInput.checked;
+  // スイッチの動作
+  toggleSwitch.addEventListener("click", () => {
+    isReversed = !isReversed;
+    toggleSwitch.classList.toggle("active", isReversed);
     updateCard();
   });
 
@@ -77,11 +74,11 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
 
   const btnKnow = document.createElement("button");
   btnKnow.id = "btn-know";
-  btnKnow.textContent = "覚えた";
+  btnKnow.textContent = "おぼえた！";
 
   const btnDontKnow = document.createElement("button");
   btnDontKnow.id = "btn-dont-know";
-  btnDontKnow.textContent = "まだ";
+  btnDontKnow.textContent = "もうすこし";
 
   container.appendChild(btnKnow);
   container.appendChild(btnDontKnow);
@@ -160,22 +157,22 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
         return isReversed ? `${item.back} - ${item.front}` : `${item.front} - ${item.back}`;
       });
       missedHTML = `<div class="missed-list">
-        <div><strong>まだ覚えていないカード</strong></div>
+        <div><strong>まだおぼえていないカード</strong></div>
         ${pairs.map(p => `<div>${p}</div>`).join("")}
       </div>`;
     } else {
       missedHTML = `<div class="missed-list">
-        <div><strong>まだ覚えていないカード</strong></div>
-        <div>なし（全て覚えました）</div>
+        <div><strong>まだおぼえていないカード</strong></div>
+        <div>なし（すべておぼえました）</div>
       </div>`;
     }
 
     result.innerHTML = `
       <div class="complete">🎉 学習完了！</div>
-      <div>${totalCards}枚中 ${learnedCount}枚覚えました。</div>
+      <div>${totalCards}枚中 ${learnedCount}枚おぼえました。</div>
       <div>達成率：${percent}%</div>
       ${missedHTML}
-      <div style="margin-top:12px;"><button id="btn-retry">再挑戦</button></div>
+      <div style="margin-top:12px;"><button id="btn-retry">もう一度トライ</button></div>
     `;
     result.style.display = "block";
 

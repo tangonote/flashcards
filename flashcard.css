@@ -9,6 +9,9 @@
   text-align: center;
   font-family: "Noto Sans JP", sans-serif;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* カード本体 */
@@ -25,13 +28,13 @@
 
 /* 表面と裏面で色を変える */
 #flashcard-app .card.front {
-  background: #f0f8ff; /* 薄い青 */
-  color: #003366;
+  background-color: #F5F5F5; /* ごく薄いグレー */
+  color: #1A1A1A;           /* 濃いグレー文字 */
 }
 
 #flashcard-app .card.back {
-  background: #fff0f5; /* 薄いピンク */
-  color: #660033;
+  background: #CFEAD9; /* 淡いミントグリーン */
+  color: #1A1A1A;
 }
 
 /* カードの内容 */
@@ -61,19 +64,19 @@
 
 /* 覚えた・まだボタンの色 */
 #flashcard-app #btn-know {
-  background-color: #4caf50;
+  background-color: #6CBF7D;
   color: white;
 }
 #flashcard-app #btn-know:hover {
-  background-color: #45a049;
+  background-color: #5AAD70;
 }
 
 #flashcard-app #btn-dont-know {
-  background-color: #f44336;
+  background-color: #F0A972;
   color: white;
 }
 #flashcard-app #btn-dont-know:hover {
-  background-color: #e53935;
+  background-color: #E69557;
 }
 
 /* 進捗表示（例：3 / 20） */
@@ -121,8 +124,8 @@
 /* --- トグルスイッチ全体を右上に配置 --- */
 .toggle-wrapper {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: -10px;   /* カードの外側に出すため少しマイナス */
+  right: 0px;
   display: flex;
   align-items: center;
   gap: 6px; /* スイッチと文字の間隔 */
