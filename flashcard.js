@@ -55,8 +55,18 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   toggleLabel.className = "toggle-label";
   toggleLabel.textContent = "表⇄裏";
 
-  const toggleSwitch = document.createElement("div");
-  toggleSwitch.className = "toggle-switch";
+  const toggleSwitch = document.createElement("label");
+  toggleSwitch.className = "switch";
+  toggleSwitch.innerHTML = `
+    <input type="checkbox" id="toggle-face">
+    <span class="slider"></span>
+  `;
+
+  const toggleInput = toggleSwitch.querySelector("input");
+  toggleInput.addEventListener("change", () => {
+    isReversed = toggleInput.checked;
+    updateCard();
+  });
 
   toggleContainer.appendChild(toggleLabel);
   toggleContainer.appendChild(toggleSwitch);
