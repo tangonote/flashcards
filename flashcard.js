@@ -84,11 +84,11 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   // ボタン
   const btnKnow = document.createElement("button");
   btnKnow.id = "btn-know";
-  btnKnow.textContent = "おぼえた！";
+  btnKnow.textContent = "覚えた！";
 
   const btnDontKnow = document.createElement("button");
   btnDontKnow.id = "btn-dont-know";
-  btnDontKnow.textContent = "もうすこし";
+  btnDontKnow.textContent = "もう少し";
 
   // 横並びボタンコンテナ
   const btnContainer = document.createElement("div");
@@ -179,19 +179,19 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
         return isReversed ? `${item.back} - ${item.front}` : `${item.front} - ${item.back}`;
       });
       missedHTML = `<div class="missed-list">
-        <div><strong>まだおぼえていないカード</strong></div>
+        <div><strong>まだ覚えていないカード</strong></div>
         ${pairs.map(p => `<div>${p}</div>`).join("")}
       </div>`;
     } else {
       missedHTML = `<div class="missed-list">
-        <div><strong>まだおぼえていないカード</strong></div>
-        <div>なし（すべておぼえました）</div>
+        <div><strong>まだ覚えていないカード</strong></div>
+        <div>なし（全て覚えました）</div>
       </div>`;
     }
 
     result.innerHTML = `
       <div class="complete">🎉 学習完了！</div>
-      <div>${totalCards}枚中 ${learnedCount}枚おぼえました。</div>
+      <div>${totalCards}枚中 ${learnedCount}枚覚えました。</div>
       <div>達成率：${percent}%</div>
       ${missedHTML}
       <div style="margin-top:12px;"><button id="btn-retry">もう一度トライ</button></div>

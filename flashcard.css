@@ -183,4 +183,14 @@
     to   { opacity: 1; transform: scale(1); }
   }
 
-  
+  /* リトライボタン */
+  #btn-retry {
+    background-color: #00BFFF;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+  }
+  #btn-retry:hover {
+    background-color: #1E90FF;
+  }
