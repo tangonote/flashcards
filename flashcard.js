@@ -23,11 +23,15 @@ function shuffleArray(array) {
   return arr;
 }
 
-function createFlashcardApp(data, targetId = "flashcard-app") {
+function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false) {
   const container = document.getElementById(targetId);
   container.innerHTML = "";
 
+  // 🔹 ここで10問制御を適用
   let cards = shuffleArray(data);
+  if (limitTo10) {
+    cards = cards.slice(0, 10);
+  }
   const totalCards = cards.length;
 
   let currentIndex = 0;
@@ -220,4 +224,47 @@ function createFlashcardApp(data, targetId = "flashcard-app") {
   } else {
     cardContent.textContent = "カードがありません";
   }
+
+// =======================================
+// 10問モード切り替え処理の追加部分
+// =======================================
+let fullDataSet = []; // 全データ保持
+
+// CSVの読み込みと初期起動処理
+document.addEventListener("DOMContentLoaded", async () => {
+  const csvUrl = "https://tangonote.github.io/flashcards/data/fruit.csv"; // ← 実際のCSV URLに変更
+  fullDataSet = await loadCSV(csvUrl);
+  initFlashcards();
+});
+
+function initFlashcards() {
+  const checkbox = document.getElementById("limit10-checkbox");
+  if (!checkbox) {
+    console.warn("limit10-checkbox が見つかりません。HTML側にチェックボックスを追加してください。");
+    return;
+  }
+
+  // チェック状態でデータ選定
+  const dataToUse = checkbox.checked
+    ? getRandomSubset(fullDataSet, 10)
+    : fullDataSet;
+
+  // カードアプリ起動
+  createFlashcardApp(dataToUse, "flashcard-app");
+
+  // チェック切替で再生成
+  checkbox.addEventListener("change", () => {
+    const data = checkbox.checked
+      ? getRandomSubset(fullDataSet, 10)
+      : fullDataSet;
+    createFlashcardApp(data, "flashcard-app");
+  });
+}
+
+// ランダムに指定数取り出す
+function getRandomSubset(array, count) {
+  const shuffled = array.slice().sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 }
