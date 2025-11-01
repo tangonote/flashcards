@@ -77,11 +77,11 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
   // ボタン
   const btnKnow = document.createElement("button");
   btnKnow.id = "btn-know";
-  btnKnow.textContent = "覚えた";
+  btnKnow.textContent = "覚えた！";
 
   const btnDontKnow = document.createElement("button");
   btnDontKnow.id = "btn-dont-know";
-  btnDontKnow.textContent = "まだ";
+  btnDontKnow.textContent = "もう少し";
 
   cardSection.appendChild(btnKnow);
   cardSection.appendChild(btnDontKnow);
