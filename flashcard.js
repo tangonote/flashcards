@@ -1,8 +1,5 @@
 /* =======================================================
-   Flashcard App – 完全版 (2025-11-01c)
-   変更点：
-   - 10問だけ出題するチェックボックス対応
-   - UIが上書きされないよう、カードエリアのみ入れ替え
+   Flashcard App – ver.2025-11-01d
    ======================================================= */
 
 // CSV読み込み関数（UTF-8チェック付き）
@@ -12,7 +9,6 @@ async function loadCSV(url) {
     const blob = await response.blob();
     const text = await blob.text();
 
-    // UTF-8確認（軽度チェック）
     const decoder = new TextDecoder("utf-8", { fatal: false });
     const decoded = decoder.decode(await blob.arrayBuffer());
     if (decoded.includes("�")) {
@@ -57,7 +53,6 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
   let cardSection = container.querySelector(".flashcard-section");
   if (cardSection) container.removeChild(cardSection);
 
-  // 新しいカードエリアを作成
   cardSection = document.createElement("div");
   cardSection.className = "flashcard-section";
   container.appendChild(cardSection);
@@ -125,7 +120,7 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
     progress.textContent = `進捗: ${current + 1} / ${totalCards}`;
   }
 
-  // 結果表示
+  // 結果表示（両面表示対応）
   function showResult() {
     cardContainer.style.display = "none";
     btnKnow.style.display = "none";
@@ -134,14 +129,18 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
 
     result.style.display = "block";
     result.classList.add("complete");
+
+    // 🔹 missed配列に「表裏ペア」を格納
+    const missedPairs = missed.map((m) => `${m[0]} - ${m[1]}`);
+
     result.innerHTML = `
       学習完了 🎉<br>
       覚えた: ${knownCount} / ${totalCards}
       <div class="missed-list">
         ${
-          missed.length
+          missedPairs.length
             ? "<strong>復習が必要なカード:</strong><br>" +
-              missed.map((m) => `<div>${m}</div>`).join("")
+              missedPairs.map((pair) => `<div>${pair}</div>`).join("")
             : "すべて覚えました！"
         }
       </div>
@@ -164,7 +163,7 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
   });
 
   btnDontKnow.addEventListener("click", () => {
-    missed.push(cards[current][0]);
+    missed.push(cards[current]); // ← 両面情報を保持
     current++;
     updateCard();
   });
