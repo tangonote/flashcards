@@ -1,21 +1,35 @@
-// =======================================
-// Flashcard App – New Version (2025-10-09)
-// =======================================
+// ==============================
+// flashcard.js（2025-11-01版）
+// ==============================
 
+// CSV読み込み（UTF-8限定チェック付き）
 async function loadCSV(url) {
-  const response = await fetch(url);
-  const text = await response.text();
-  return text
-    .trim()
-    .split("\n")
-    .map(line => {
-      const [front, back] = line.split(",");
-      return { front: front.trim(), back: back.trim() };
-    });
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    // UTF-8でない可能性がある場合の警告
+    const text = await blob.text();
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    try {
+      decoder.decode(await blob.arrayBuffer());
+    } catch (e) {
+      alert("⚠ CSVファイルはUTF-8形式で保存してください。");
+      throw new Error("CSV encoding error: not UTF-8");
+    }
+
+    const rows = text.trim().split(/\r?\n/).map(line => line.split(","));
+    return rows.map(([front, back]) => ({ front, back }));
+  } catch (error) {
+    console.error("CSV読み込みエラー:", error);
+    alert("CSVファイルを読み込めませんでした。");
+    return [];
+  }
 }
 
+// 配列をランダムシャッフル
 function shuffleArray(array) {
-  const arr = array.slice();
+  const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -23,248 +37,100 @@ function shuffleArray(array) {
   return arr;
 }
 
+// フラッシュカードアプリ作成
 function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false) {
   const container = document.getElementById(targetId);
   container.innerHTML = "";
 
-  // 🔹 ここで10問制御を適用
+  // 🔹 出題数制御（10問のみ or 全問）
   let cards = shuffleArray(data);
   if (limitTo10) {
     cards = cards.slice(0, 10);
   }
   const totalCards = cards.length;
-
   let currentIndex = 0;
-  let showBack = false;
-  let isReversed = false;
-  let learnedCount = 0;
-  let missedWords = [];
+  let showingFront = true;
 
-  // ----------------------------------
-  // UI構築
-  // ----------------------------------
-
-  // トグルスイッチ（右上外側配置）
-  const toggleContainer = document.createElement("div");
-  toggleContainer.id = "btn-toggle-container";
-  toggleContainer.style.position = "absolute";
-  toggleContainer.style.top = "0";
-  toggleContainer.style.right = "0";
-  toggleContainer.style.margin = "10px";
-  toggleContainer.style.display = "flex";
-  toggleContainer.style.alignItems = "center";
-  toggleContainer.style.gap = "6px";
-  toggleContainer.style.zIndex = "1000"; // カードより前面に固定
-
-  const toggleLabel = document.createElement("span");
-  toggleLabel.className = "toggle-label";
-  toggleLabel.textContent = "表⇄裏";
-
-  const toggleSwitch = document.createElement("label");
-  toggleSwitch.className = "switch";
-  toggleSwitch.innerHTML = `
-    <input type="checkbox" id="toggle-face">
-    <span class="slider"></span>
-  `;
-
-  const toggleInput = toggleSwitch.querySelector("input");
-  toggleInput.addEventListener("change", () => {
-    isReversed = toggleInput.checked;
-    updateCard();
-  });
-
-  toggleContainer.appendChild(toggleLabel);
-  toggleContainer.appendChild(toggleSwitch);
-  container.appendChild(toggleContainer);
-
-  // カード
+  // メインカード要素
   const card = document.createElement("div");
-  card.className = "card front";
+  card.className = "flashcard";
   const cardContent = document.createElement("div");
   cardContent.className = "card-content";
   card.appendChild(cardContent);
-  container.appendChild(card);
 
-  // ボタン
-  const btnKnow = document.createElement("button");
-  btnKnow.id = "btn-know";
-  btnKnow.textContent = "覚えた！";
+  // ボタン類
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "次へ";
+  nextBtn.className = "next-btn";
 
-  const btnDontKnow = document.createElement("button");
-  btnDontKnow.id = "btn-dont-know";
-  btnDontKnow.textContent = "もう少し";
+  const backBtn = document.createElement("button");
+  backBtn.textContent = "戻る";
+  backBtn.className = "back-btn";
 
-  // 横並びボタンコンテナ
-  const btnContainer = document.createElement("div");
-  btnContainer.id = "btn-container";
-  btnContainer.appendChild(btnKnow);
-  btnContainer.appendChild(btnDontKnow);
-  container.appendChild(btnContainer);
-
-  // 進捗と結果
+  // 進捗表示
   const progress = document.createElement("div");
-  progress.id = "progress";
+  progress.className = "progress";
+
+  // コンテナに追加
   container.appendChild(progress);
+  container.appendChild(card);
+  container.appendChild(backBtn);
+  container.appendChild(nextBtn);
 
-  const result = document.createElement("div");
-  result.id = "result";
-  container.appendChild(result);
-
-  // ----------------------------------
-  // イベント設定
-  // ----------------------------------
-
-  toggleSwitch.addEventListener("click", () => {
-    isReversed = !isReversed;
-    toggleSwitch.classList.toggle("active", isReversed);
-    updateCard();
-  });
-
-  card.addEventListener("click", () => {
-    showBack = !showBack;
-    updateCard();
-  });
-
-  btnKnow.addEventListener("click", () => {
-    learnedCount++;
-    nextCard();
-  });
-
-  btnDontKnow.addEventListener("click", () => {
-    const curr = cards[currentIndex];
-    const exists = missedWords.some(
-      item => item.front === curr.front && item.back === curr.back
-    );
-    if (!exists) missedWords.push(curr);
-    nextCard();
-  });
-
-  // ----------------------------------
-  // 関数群
-  // ----------------------------------
-
+  // 表示更新関数
   function updateCard() {
-    if (totalCards === 0) {
+    if (cards.length === 0) {
       cardContent.textContent = "カードがありません";
       progress.textContent = "";
       return;
     }
-
-    const current = cards[currentIndex];
-    const frontText = isReversed ? current.back : current.front;
-    const backText = isReversed ? current.front : current.back;
-
-    cardContent.textContent = showBack ? backText : frontText;
-    card.className = showBack ? "card back" : "card front";
+    const cardData = cards[currentIndex];
+    cardContent.textContent = showingFront ? cardData.front : cardData.back;
     progress.textContent = `${currentIndex + 1} / ${totalCards}`;
   }
 
-  function nextCard() {
-    showBack = false;
-    currentIndex++;
-    if (currentIndex >= totalCards) {
-      endSession();
-      return;
-    }
+  // クリックで表裏切替
+  card.addEventListener("click", () => {
+    showingFront = !showingFront;
     updateCard();
-  }
+  });
 
-  function endSession() {
-    card.style.display = "none";
-    btnContainer.style.display = "none";
-    toggleContainer.style.display = "none";
-    progress.style.display = "none";
-
-    const percent = totalCards === 0 ? 0 : Math.round((learnedCount / totalCards) * 100);
-
-    let missedHTML = "";
-    if (missedWords.length > 0) {
-      const pairs = missedWords.map(item => {
-        return isReversed ? `${item.back} - ${item.front}` : `${item.front} - ${item.back}`;
-      });
-      missedHTML = `<div class="missed-list">
-        <div><strong>まだ覚えていないカード</strong></div>
-        ${pairs.map(p => `<div>${p}</div>`).join("")}
-      </div>`;
-    } else {
-      missedHTML = `<div class="missed-list">
-        <div><strong>まだ覚えていないカード</strong></div>
-        <div>なし（全て覚えました）</div>
-      </div>`;
-    }
-
-    result.innerHTML = `
-      <div class="complete">🎉 学習完了！</div>
-      <div>${totalCards}枚中 ${learnedCount}枚覚えました。</div>
-      <div>達成率：${percent}%</div>
-      ${missedHTML}
-      <div style="margin-top:12px;"><button id="btn-retry">もう一度トライ</button></div>
-    `;
-    result.style.display = "block";
-
-    document.getElementById("btn-retry").addEventListener("click", () => {
-      currentIndex = 0;
-      showBack = false;
-      learnedCount = 0;
-      missedWords = [];
-
-      card.style.display = "";
-      btnContainer.style.display = "";
-      toggleContainer.style.display = "";
-      progress.style.display = "";
-      result.style.display = "none";
-
+  // ボタン操作
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < totalCards - 1) {
+      currentIndex++;
+      showingFront = true;
       updateCard();
-    });
-  }
+    } else {
+      cardContent.textContent = "🎉 学習完了！";
+      progress.textContent = `${totalCards} / ${totalCards}`;
+    }
+  });
+
+  backBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      showingFront = true;
+      updateCard();
+    }
+  });
 
   // 初期表示
-  if (totalCards > 0) {
-    updateCard();
-  } else {
-    cardContent.textContent = "カードがありません";
+  updateCard();
+}
+
+// ==============================
+// グローバル関数（トグル用）
+// ==============================
+window.toggleFlashcardSide = function (isBackSide) {
+  const app = document.querySelector("#flashcard-app .card-content");
+  if (!app) return;
+
+  const currentText = app.textContent;
+  const allCards = window.currentFlashcards || [];
+  const card = allCards.find(c => c.front === currentText || c.back === currentText);
+
+  if (card) {
+    app.textContent = isBackSide ? card.back : card.front;
   }
-
-// =======================================
-// 10問モード切り替え処理の追加部分
-// =======================================
-let fullDataSet = []; // 全データ保持
-
-// CSVの読み込みと初期起動処理
-document.addEventListener("DOMContentLoaded", async () => {
-  const csvUrl = "https://tangonote.github.io/flashcards/data/fruit.csv"; // ← 実際のCSV URLに変更
-  fullDataSet = await loadCSV(csvUrl);
-  initFlashcards();
-});
-
-function initFlashcards() {
-  const checkbox = document.getElementById("limit10-checkbox");
-  if (!checkbox) {
-    console.warn("limit10-checkbox が見つかりません。HTML側にチェックボックスを追加してください。");
-    return;
-  }
-
-  // チェック状態でデータ選定
-  const dataToUse = checkbox.checked
-    ? getRandomSubset(fullDataSet, 10)
-    : fullDataSet;
-
-  // カードアプリ起動
-  createFlashcardApp(dataToUse, "flashcard-app");
-
-  // チェック切替で再生成
-  checkbox.addEventListener("change", () => {
-    const data = checkbox.checked
-      ? getRandomSubset(fullDataSet, 10)
-      : fullDataSet;
-    createFlashcardApp(data, "flashcard-app");
-  });
-}
-
-// ランダムに指定数取り出す
-function getRandomSubset(array, count) {
-  const shuffled = array.slice().sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
-
-}
+};
