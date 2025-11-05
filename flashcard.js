@@ -1,5 +1,5 @@
 /* =======================================================
-   Flashcard App – ver.2025-11-01d
+   Flashcard App – ver.2025-11-06a（表裏リセット対応）
    ======================================================= */
 
 // CSV読み込み関数（UTF-8チェック付き）
@@ -102,13 +102,23 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
   let missed = [];
   let showFront = true;
 
-  // トグル制御（外部トグルスイッチと連携）
+  // --- トグル制御（外部スイッチと連携） ---
   window.toggleFlashcardSide = function (isBack) {
     showFront = !isBack;
     updateCard();
   };
 
-  // カード更新
+  // --- 表裏をトグル状態にリセットする関数 ---
+  function resetSideToToggle() {
+    const toggle = document.getElementById("toggleSide");
+    if (toggle) {
+      showFront = !toggle.checked; // トグルONなら裏面、OFFなら表面
+    } else {
+      showFront = true; // トグルが存在しない場合は表面
+    }
+  }
+
+  // --- カード更新 ---
   function updateCard() {
     if (current >= totalCards) {
       showResult();
@@ -120,7 +130,7 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
     progress.textContent = `進捗: ${current + 1} / ${totalCards}`;
   }
 
-  // 結果表示（両面表示対応）
+  // --- 結果表示 ---
   function showResult() {
     cardContainer.style.display = "none";
     btnKnow.style.display = "none";
@@ -130,9 +140,7 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
     result.style.display = "block";
     result.classList.add("complete");
 
-    // 🔹 missed配列に「表裏ペア」を格納
     const missedPairs = missed.map((m) => `${m[0]} - ${m[1]}`);
-
     result.innerHTML = `
       学習完了 🎉<br>
       覚えた: ${knownCount} / ${totalCards}
@@ -155,16 +163,18 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
     cardSection.appendChild(retryBtn);
   }
 
-  // イベント
+  // --- イベント設定 ---
   btnKnow.addEventListener("click", () => {
     knownCount++;
     current++;
+    resetSideToToggle(); // ← 新規追加
     updateCard();
   });
 
   btnDontKnow.addEventListener("click", () => {
-    missed.push(cards[current]); // ← 両面情報を保持
+    missed.push(cards[current]);
     current++;
+    resetSideToToggle(); // ← 新規追加
     updateCard();
   });
 
@@ -173,6 +183,7 @@ function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false)
     updateCard();
   });
 
-  // 初期表示
+  // --- 初期表示 ---
+  resetSideToToggle(); // 初回もトグルに従う
   updateCard();
 }
