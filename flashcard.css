@@ -1,233 +1,157 @@
-/* =======================================
-   Flashcard App – 完全版 (2025-11-01)
-   ======================================= */
+/* ========================================
+   Flashcard CSS – 2025-11-06 (clean version)
+   ======================================== */
 
-   #flashcard-app {
-    max-width: 600px;
-    margin: 30px auto;
-    text-align: center;
-    font-family: "Noto Sans JP", sans-serif;
-    position: relative; /* トグルの基準にする */
+/* 全体 */
+#flashcard-app {
+  font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+  user-select: none;
+}
+
+/* カードコンテナ */
+.card {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  perspective: 1000px;
+  margin: 20px auto;
+  cursor: pointer;
+  transition: transform 0.6s;
+}
+
+/* カード内面 */
+.card .front,
+.card .back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 裏面 */
+.card .back {
+  transform: rotateY(180deg);
+  background: #f7f7ff;
+}
+
+/* 裏面を表示中の状態 */
+.card.show-back {
+  transform: rotateY(180deg);
+}
+
+/* 操作ボタン */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 10px 0;
+}
+
+.controls button {
+  background: #4b8df8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.controls button:hover {
+  background: #357ae8;
+}
+
+/* カウンター表示 */
+#counter {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* トグルスイッチ部分 */
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 22px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4b8df8;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* チェックボックスの余白 */
+#question-limit-container {
+  margin-top: 10px;
+  font-size: 0.95rem;
+}
+
+#question-limit-container label {
+  cursor: pointer;
+}
+
+/* レスポンシブ微調整 */
+@media (max-width: 480px) {
+  .card {
+    height: 160px;
   }
-  
-  /* -----------------------------
-     カード領域全体
-  ----------------------------- */
-  #flashcard-app .card-container {
-    position: relative;
-    width: 100%;
-    min-height: 220px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .card .front,
+  .card .back {
+    font-size: 1.2rem;
   }
-  
-  /* -----------------------------
-     カード本体
-  ----------------------------- */
-  #flashcard-app .card {
-    position: relative;
-    width: 100%;
-    min-height: 220px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    user-select: none;
-    box-sizing: border-box;
-  }
-  
-  /* 表面と裏面で色を変える */
-  #flashcard-app .card.front {
-    background-color: #F5F5F5;
-    color: #1A1A1A;
-  }
-  
-  #flashcard-app .card.back {
-    background: #CFEAD9;
-    color: #1A1A1A;
-  }
-  
-  /* カード内容 */
-  #flashcard-app .card-content {
-    font-size: 26px;
-    font-weight: bold;
-    text-align: center;
-    max-width: 90%;
-    word-break: break-word;
-    line-height: 1.4;
-  }
-  
-  /* -----------------------------
-     トグルスイッチ（表⇄裏）
-  ----------------------------- */
-  .toggle-wrapper {
-    position: absolute;
-    top: -12px;
-    right: -8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    z-index: 10;
-  }
-  
-  .toggle-text {
-    font-size: 0.9rem;
-    color: #333;
-    user-select: none;
-  }
-  
-  /* --- スマホ風トグルスイッチ --- */
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 28px;
-  }
-  
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: 0.3s;
-    border-radius: 28px;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: 0.3s;
-    border-radius: 50%;
-  }
-  
-  input:checked + .slider {
-    background-color: #4CAF50;
-  }
-  
-  input:checked + .slider:before {
-    transform: translateX(22px);
-  }
-  
-  /* -----------------------------
-     ボタン群
-  ----------------------------- */
-  #flashcard-app button {
-    margin: 6px;
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-    color: white;
-  }
-  
-  #flashcard-app button:active {
-    transform: scale(0.97);
-  }
-  
-  /* 覚えた・まだボタン */
-  #flashcard-app #btn-know {
-    background-color: #6CBF7D;
-  }
-  #flashcard-app #btn-know:hover {
-    opacity: 0.85;
-  }
-  
-  #flashcard-app #btn-dont-know {
-    background-color: #F0A972;
-  }
-  #flashcard-app #btn-dont-know:hover {
-    opacity: 0.85;
-  }
-  
-  /* リトライボタン */
-  #btn-retry {
-    background-color: #00BFFF;
-    color: #fff;
-    font-weight: bold;
-    padding: 10px 20px;
-    border-radius: 8px;
-  }
-  #btn-retry:hover {
-    background-color: #1E90FF;
-  }
-  
-  /* -----------------------------
-     進捗・結果表示
-  ----------------------------- */
-  #flashcard-app #progress {
-    font-size: 16px;
-    color: #555;
-    margin-top: 10px;
-  }
-  
-  #flashcard-app #result {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 12px;
-    display: none;
-  }
-  
-  #flashcard-app .missed-list {
-    margin-top: 12px;
-    max-height: 250px;
-    overflow-y: auto;
-    padding: 4px;
-    border-top: 1px solid #ccc;
-  }
-  
-  #flashcard-app .missed-list div {
-    margin-bottom: 6px;
-    font-size: 16px;
-  }
-  
-  /* 完了アニメーション */
-  #flashcard-app .complete {
-    animation: fadeIn 0.8s ease-in-out;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to   { opacity: 1; transform: scale(1); }
-  }
-  
-  /* -----------------------------
-     10問制御チェックボックス
-  ----------------------------- */
-  #question-limit-container {
-    text-align: left;
-    margin-bottom: 12px;
-    font-size: 15px;
-    color: #333;
-  }
-  
-  #question-limit-container input {
-    transform: scale(1.2);
-    margin-right: 6px;
-    cursor: pointer;
-  }
-  
+}

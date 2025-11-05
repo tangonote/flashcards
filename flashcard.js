@@ -1,189 +1,136 @@
-/* =======================================================
-   Flashcard App – ver.2025-11-06a（表裏リセット対応）
-   ======================================================= */
+/* ===============================
+   flashcard.js（モジュール構成版）
+   =============================== */
+const FlashcardApp = (() => {
 
-// CSV読み込み関数（UTF-8チェック付き）
-async function loadCSV(url) {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const text = await blob.text();
-
-    const decoder = new TextDecoder("utf-8", { fatal: false });
-    const decoded = decoder.decode(await blob.arrayBuffer());
-    if (decoded.includes("�")) {
-      alert("⚠️ CSVファイルがUTF-8形式でない可能性があります。");
-    }
-
-    return parseCSV(text);
-  } catch (error) {
-    console.error("CSV読み込み失敗:", error);
-    alert("CSVファイルの読み込みに失敗しました。");
-    return [];
-  }
-}
-
-// CSV文字列 → 配列
-function parseCSV(text) {
-  return text
-    .trim()
-    .split("\n")
-    .map((line) => line.split(",").map((s) => s.trim()))
-    .filter((row) => row.length >= 2);
-}
-
-// 配列をシャッフル
-function shuffleArray(array) {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// =======================================================
-// Flashcardアプリ本体
-// =======================================================
-function createFlashcardApp(data, targetId = "flashcard-app", limitTo10 = false) {
-  const container = document.getElementById(targetId);
-  if (!container) return;
-
-  // 既存のチェックボックスやトグルは残すため、カードエリアのみ再生成
-  let cardSection = container.querySelector(".flashcard-section");
-  if (cardSection) container.removeChild(cardSection);
-
-  cardSection = document.createElement("div");
-  cardSection.className = "flashcard-section";
-  container.appendChild(cardSection);
-
-  // 出題制御
-  let cards = shuffleArray(data);
-  if (limitTo10) cards = cards.slice(0, 10);
-  const totalCards = cards.length;
-
-  // カード表示領域
-  const cardContainer = document.createElement("div");
-  cardContainer.className = "card-container";
-
-  const card = document.createElement("div");
-  card.className = "card front";
-  const content = document.createElement("div");
-  content.className = "card-content";
-  card.appendChild(content);
-  cardContainer.appendChild(card);
-  cardSection.appendChild(cardContainer);
-
-  // ボタン
-  const btnKnow = document.createElement("button");
-  btnKnow.id = "btn-know";
-  btnKnow.textContent = "覚えた！";
-
-  const btnDontKnow = document.createElement("button");
-  btnDontKnow.id = "btn-dont-know";
-  btnDontKnow.textContent = "もう少し";
-
-  cardSection.appendChild(btnKnow);
-  cardSection.appendChild(btnDontKnow);
-
-  // 進捗表示
-  const progress = document.createElement("div");
-  progress.id = "progress";
-  cardSection.appendChild(progress);
-
-  // 結果エリア
-  const result = document.createElement("div");
-  result.id = "result";
-  cardSection.appendChild(result);
-
-  // 状態
-  let current = 0;
-  let knownCount = 0;
-  let missed = [];
+  // 内部状態
+  let cards = [];
+  let currentIndex = 0;
   let showFront = true;
+  let containerId = "";
 
-  // --- トグル制御（外部スイッチと連携） ---
-  window.toggleFlashcardSide = function (isBack) {
+  /* ---------- CSV読み込み ---------- */
+  async function loadCSV(url) {
+    const res = await fetch(url);
+    const text = await res.text();
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",");
+    return lines.slice(1).map(line => {
+      const values = line.split(",");
+      const obj = {};
+      headers.forEach((h, i) => (obj[h.trim()] = values[i].trim()));
+      return obj;
+    });
+  }
+
+  /* ---------- ランダム抽出 ---------- */
+  function getRandomSubset(array, count) {
+    const shuffled = array.slice().sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  }
+
+  /* ---------- カード生成 ---------- */
+  function createFlashcardApp(data, containerIdArg) {
+    cards = data;
+    containerId = containerIdArg;
+    currentIndex = 0;
+
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const front = document.createElement("div");
+    front.className = "front";
+    const back = document.createElement("div");
+    back.className = "back";
+
+    card.appendChild(front);
+    card.appendChild(back);
+    container.appendChild(card);
+
+    const controls = document.createElement("div");
+    controls.className = "controls";
+    controls.innerHTML = `
+      <button id="prevBtn">←</button>
+      <span id="counter"></span>
+      <button id="nextBtn">→</button>
+    `;
+    container.appendChild(controls);
+
+    document.getElementById("prevBtn").addEventListener("click", prevCard);
+    document.getElementById("nextBtn").addEventListener("click", nextCard);
+
+    updateCardView();
+  }
+
+  /* ---------- 表示更新 ---------- */
+  function updateCardView() {
+    const card = document.querySelector(`#${containerId} .card`);
+    const front = card.querySelector(".front");
+    const back = card.querySelector(".back");
+    const counter = document.getElementById("counter");
+
+    if (!cards.length) return;
+
+    front.textContent = cards[currentIndex].front || "";
+    back.textContent = cards[currentIndex].back || "";
+    counter.textContent = `${currentIndex + 1} / ${cards.length}`;
+
+    card.classList.remove("show-back");
+    if (!showFront) card.classList.add("show-back");
+  }
+
+  /* ---------- カード切替 ---------- */
+  function nextCard() {
+    if (currentIndex < cards.length - 1) {
+      currentIndex++;
+      resetSideByToggle();
+      updateCardView();
+    }
+  }
+
+  function prevCard() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      resetSideByToggle();
+      updateCardView();
+    }
+  }
+
+  /* ---------- 表裏リセット ---------- */
+  function resetSideByToggle() {
+    const toggle = document.getElementById("toggleSide");
+    showFront = !toggle.checked; // トグルOFF＝表、ON＝裏から表示
+  }
+
+  /* ---------- トグル操作 ---------- */
+  function toggleSide(isBack) {
     showFront = !isBack;
-    updateCard();
-  };
+    updateCardView();
+  }
 
-  // --- 表裏をトグル状態にリセットする関数 ---
-  function resetSideToToggle() {
+  /* ---------- アプリ初期化 ---------- */
+  async function init(csvUrl) {
+    const data = await loadCSV(csvUrl);
+    const limitCheckbox = document.getElementById("limit10-checkbox");
+
+    const render = () => {
+      const limited = limitCheckbox.checked ? getRandomSubset(data, 10) : data;
+      createFlashcardApp(limited, "flashcard-app");
+    };
+
+    limitCheckbox.addEventListener("change", render);
+    render();
+
     const toggle = document.getElementById("toggleSide");
     if (toggle) {
-      showFront = !toggle.checked; // トグルONなら裏面、OFFなら表面
-    } else {
-      showFront = true; // トグルが存在しない場合は表面
+      toggle.addEventListener("change", e => toggleSide(e.target.checked));
     }
   }
 
-  // --- カード更新 ---
-  function updateCard() {
-    if (current >= totalCards) {
-      showResult();
-      return;
-    }
-    const [front, back] = cards[current];
-    content.textContent = showFront ? front : back;
-    card.className = showFront ? "card front" : "card back";
-    progress.textContent = `進捗: ${current + 1} / ${totalCards}`;
-  }
+  /* ---------- 公開API ---------- */
+  return { init };
 
-  // --- 結果表示 ---
-  function showResult() {
-    cardContainer.style.display = "none";
-    btnKnow.style.display = "none";
-    btnDontKnow.style.display = "none";
-    progress.style.display = "none";
-
-    result.style.display = "block";
-    result.classList.add("complete");
-
-    const missedPairs = missed.map((m) => `${m[0]} - ${m[1]}`);
-    result.innerHTML = `
-      学習完了 🎉<br>
-      覚えた: ${knownCount} / ${totalCards}
-      <div class="missed-list">
-        ${
-          missedPairs.length
-            ? "<strong>復習が必要なカード:</strong><br>" +
-              missedPairs.map((pair) => `<div>${pair}</div>`).join("")
-            : "すべて覚えました！"
-        }
-      </div>
-    `;
-
-    const retryBtn = document.createElement("button");
-    retryBtn.id = "btn-retry";
-    retryBtn.textContent = "もう一度";
-    retryBtn.addEventListener("click", () =>
-      createFlashcardApp(data, targetId, limitTo10)
-    );
-    cardSection.appendChild(retryBtn);
-  }
-
-  // --- イベント設定 ---
-  btnKnow.addEventListener("click", () => {
-    knownCount++;
-    current++;
-    resetSideToToggle(); // ← 新規追加
-    updateCard();
-  });
-
-  btnDontKnow.addEventListener("click", () => {
-    missed.push(cards[current]);
-    current++;
-    resetSideToToggle(); // ← 新規追加
-    updateCard();
-  });
-
-  card.addEventListener("click", () => {
-    showFront = !showFront;
-    updateCard();
-  });
-
-  // --- 初期表示 ---
-  resetSideToToggle(); // 初回もトグルに従う
-  updateCard();
-}
+})();
